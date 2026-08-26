@@ -6,11 +6,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("services")
 public class NotificationService {
@@ -19,19 +21,19 @@ public class NotificationService {
     @Path("notification")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public NotificationDTO notificationProcessPost(NotificationDTO dto) {
-        return process(dto);
+    public Response notificationProcessPost(@HeaderParam("tsec") String tsecHeader, NotificationDTO dto) {
+        return process(tsecHeader, dto);
     }
 
     @PUT
     @Path("notification")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public NotificationDTO notificationProcessPut(NotificationDTO dto) {
-        return process(dto);
+    public Response notificationProcessPut(@HeaderParam("tsec") String tsecHeader, NotificationDTO dto) {
+        return process(tsecHeader, dto);
     }
 
-    private NotificationDTO process(NotificationDTO dto) {
+    private Response process(String tsecHeader, NotificationDTO dto) {
         // Asignar código de respuesta exitoso si no viene indicado
         if (dto.getCodresp() == null || dto.getCodresp().isEmpty()) {
             dto.setCodresp("00");
@@ -65,7 +67,6 @@ public class NotificationService {
         }
 
         // Si es Pago o Cobro, asegurar hora de pago
-
         if (("PAG".equals(dto.getTipoper()) || "COB".equals(dto.getTipoper()))
                 && (dto.getHorpago() == null || dto.getHorpago().isEmpty())) {
 
@@ -74,8 +75,7 @@ public class NotificationService {
             dto.setHorpago(horaActual);
         }
 
-        // Inicializar cadenas vacías en atributos nulos para coincidir con la plantilla
-        // BBVA
+        // Inicializar cadenas vacías en atributos nulos para coincidir con la plantilla BBVA
         if (dto.getAutoriz() == null)
             dto.setAutoriz("");
         if (dto.getCertiem() == null)
@@ -100,6 +100,8 @@ public class NotificationService {
             dto.setFlpagem("");
         if (dto.getTppagem() == null)
             dto.setTppagem("");
+        if (dto.getFhvigem() == null)
+            dto.setFhvigem("");
         if (dto.getImmaxem() == null)
             dto.setImmaxem(0.0);
         if (dto.getImminem() == null)
@@ -111,6 +113,12 @@ public class NotificationService {
         if (dto.getNummens() == null)
             dto.setNummens(0L);
 
-        return dto;
+        // Capturar o asignar valor por defecto al header tsec
+        String responseTsec = (tsecHeader != null && !tsecHeader.trim().isEmpty()) ? tsecHeader : "";
+
+        // Construir la respuesta HTTP 200 OK con el cuerpo DTO y el Header 'tsec'
+        return Response.ok(dto)
+                .header("tsec", responseTsec)
+                .build();
     }
 }
