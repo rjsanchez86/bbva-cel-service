@@ -2,6 +2,8 @@ package com.bbva.services;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -76,12 +78,15 @@ public class NotificationService {
         if (("PAG".equals(dto.getTipoper()) || "COB".equals(dto.getTipoper()))
                 && (dto.getHorpago() == null || dto.getHorpago().isEmpty())) {
 
-            // Obtiene la hora actual del servidor en formato HHmmss (6 dígitos)
-            String horaActual = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
-            dto.setHorpago(horaActual);
+            // Obtiene la hora exacta actual en la Zona Horaria de México (HHmmss)
+            String horaActualCDMX = ZonedDateTime.now(ZoneId.of("America/Mexico_City"))
+                    .format(DateTimeFormatter.ofPattern("HHmmss"));
+
+            dto.setHorpago(horaActualCDMX);
         }
 
-        // Inicializar cadenas vacías en atributos nulos para coincidir con la plantilla BBVA
+        // Inicializar cadenas vacías en atributos nulos para coincidir con la plantilla
+        // BBVA
         if (dto.getAutoriz() == null)
             dto.setAutoriz("");
         if (dto.getCertiem() == null)
@@ -121,7 +126,9 @@ public class NotificationService {
 
         // Capturar o asignar valor por defecto a los headers tsec y ConsumerRequestID
         String responseTsec = (tsecHeader != null && !tsecHeader.trim().isEmpty()) ? tsecHeader : "";
-        String responseRequestId = (consumerRequestIdHeader != null && !consumerRequestIdHeader.trim().isEmpty()) ? consumerRequestIdHeader : "";
+        String responseRequestId = (consumerRequestIdHeader != null && !consumerRequestIdHeader.trim().isEmpty())
+                ? consumerRequestIdHeader
+                : "";
 
         // Construir la respuesta HTTP 200 OK devolviendo ambos headers
         return Response.ok(dto)
