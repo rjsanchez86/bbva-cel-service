@@ -21,19 +21,25 @@ public class NotificationService {
     @Path("notification")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public Response notificationProcessPost(@HeaderParam("tsec") String tsecHeader, NotificationDTO dto) {
-        return process(tsecHeader, dto);
+    public Response notificationProcessPost(
+            @HeaderParam("tsec") String tsecHeader,
+            @HeaderParam("ConsumerRequestID") String consumerRequestIdHeader,
+            NotificationDTO dto) {
+        return process(tsecHeader, consumerRequestIdHeader, dto);
     }
 
     @PUT
     @Path("notification")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public Response notificationProcessPut(@HeaderParam("tsec") String tsecHeader, NotificationDTO dto) {
-        return process(tsecHeader, dto);
+    public Response notificationProcessPut(
+            @HeaderParam("tsec") String tsecHeader,
+            @HeaderParam("ConsumerRequestID") String consumerRequestIdHeader,
+            NotificationDTO dto) {
+        return process(tsecHeader, consumerRequestIdHeader, dto);
     }
 
-    private Response process(String tsecHeader, NotificationDTO dto) {
+    private Response process(String tsecHeader, String consumerRequestIdHeader, NotificationDTO dto) {
         // Asignar código de respuesta exitoso si no viene indicado
         if (dto.getCodresp() == null || dto.getCodresp().isEmpty()) {
             dto.setCodresp("00");
@@ -113,12 +119,14 @@ public class NotificationService {
         if (dto.getNummens() == null)
             dto.setNummens(0L);
 
-        // Capturar o asignar valor por defecto al header tsec
+        // Capturar o asignar valor por defecto a los headers tsec y ConsumerRequestID
         String responseTsec = (tsecHeader != null && !tsecHeader.trim().isEmpty()) ? tsecHeader : "";
+        String responseRequestId = (consumerRequestIdHeader != null && !consumerRequestIdHeader.trim().isEmpty()) ? consumerRequestIdHeader : "";
 
-        // Construir la respuesta HTTP 200 OK con el cuerpo DTO y el Header 'tsec'
+        // Construir la respuesta HTTP 200 OK devolviendo ambos headers
         return Response.ok(dto)
                 .header("tsec", responseTsec)
+                .header("ConsumerRequestID", responseRequestId)
                 .build();
     }
 }
